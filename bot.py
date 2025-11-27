@@ -381,21 +381,8 @@ def index():
 PORT = int(os.environ.get("PORT", 10000))
 
 
-def run_bot():
-    """Запускає long polling та перезапускає при помилках."""
-    while True:
-        try:
-            # infinity_polling сам тримає з’єднання довго
-            bot.infinity_polling(timeout=60, long_polling_timeout=50)
-        except Exception as e:
-            print("Polling error:", e)
-            time.sleep(5)  # трохи почекати й спробувати ще раз
-
 
 if __name__ == "__main__":
-    print("Starting bot on Render...")
-    # бот в окремому потоці
-    threading.Thread(target=run_bot, daemon=True).start()
-    # HTTP-сервер для Render (щоб був відкритий порт)
+    print("Starting bot on Render using webhook...")
     app.run(host="0.0.0.0", port=PORT)
 
