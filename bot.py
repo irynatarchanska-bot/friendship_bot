@@ -1,3 +1,7 @@
+import os
+import threading
+from http.server import SimpleHTTPRequestHandler
+import socketserver
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -361,5 +365,20 @@ def handle_callback(call):
 
 
 print("Bot is running with images...")
-bot.infinity_polling()
+if __name__ == "__main__":
+    def run_bot():
+        # основний цикл бота
+        bot.infinity_polling(skip_pending=True)
+
+    def run_server():
+        # Render дає номер порту в змінній середовища PORT
+        port = int(os.environ.get("PORT", 10000))
+        with socketserver.TCPServer(("", port), SimpleHTTPRequestHandler) as httpd:
+            print(f"Simple HTTP server running on port {port}")
+            httpd.serve_forever()
+
+    # запускаємо бота в окремому потоці
+    threading.Thread(target=run_bot, daemon=True).start()
+    # а тут — простий HTTP-сервер, щоб Render бачив відкритий порт
+    run_server()
 
