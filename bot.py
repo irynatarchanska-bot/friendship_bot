@@ -365,20 +365,37 @@ def handle_callback(call):
 
 
 print("Bot is running with images...")
+
+# ========= HTTP-сервер для Render =========
+from flask import Flask
+import os
+import threading
+import time
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Bot is alive", 200
+
+PORT = int(os.environ.get("PORT", 10000))
+
+
+def run_bot():
+    """Запускає long polling та перезапускає при помилках."""
+    while True:
+        try:
+            # infinity_polling сам тримає з’єднання довго
+            bot.infinity_polling(timeout=60, long_polling_timeout=50)
+        except Exception as e:
+            print("Polling error:", e)
+            time.sleep(5)  # трохи почекати й спробувати ще раз
+
+
 if __name__ == "__main__":
-    def run_bot():
-        # основний цикл бота
-        bot.infinity_polling(skip_pending=True)
-
-    def run_server():
-        # Render дає номер порту в змінній середовища PORT
-        port = int(os.environ.get("PORT", 10000))
-        with socketserver.TCPServer(("", port), SimpleHTTPRequestHandler) as httpd:
-            print(f"Simple HTTP server running on port {port}")
-            httpd.serve_forever()
-
-    # запускаємо бота в окремому потоці
+    print("Starting bot on Render...")
+    # бот в окремому потоці
     threading.Thread(target=run_bot, daemon=True).start()
-    # а тут — простий HTTP-сервер, щоб Render бачив відкритий порт
-    run_server()
+    # HTTP-сервер для Render (щоб був відкритий порт)
+    app.run(host="0.0.0.0", port=PORT)
 
