@@ -366,23 +366,30 @@ def handle_callback(call):
 
 print("Bot is running with images...")
 
-# ========= HTTP-сервер для Render =========
-from flask import Flask
+# ====== WEBHOOK + Flask для Render ======
 import os
-import threading
 import time
+from flask import Flask, request
+# import telebot  # цей рядок можна ВИДАЛИТИ, бо telebot вже імпортований вище
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     return "Bot is alive", 200
 
+@app.route("/webhook", methods=["POST"])
+def telegram_webhook():
+    json_str = request.get_data().decode("utf-8")
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "OK", 200
+
+
 PORT = int(os.environ.get("PORT", 10000))
-
-
 
 if __name__ == "__main__":
     print("Starting bot on Render using webhook...")
+    # НІЧОГО НЕ ЧІПАЄМО з вебхуком тут, він уже налаштований через браузер
     app.run(host="0.0.0.0", port=PORT)
 
